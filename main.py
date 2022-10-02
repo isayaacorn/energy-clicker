@@ -4,7 +4,7 @@ from src import MainFrame, State
 
 def main():
     app = App()
-    frame = MainFrame(None, title = "Energy Clicker", state = State(0))
+    frame = MainFrame(None, title = "Energy Clicker", state = State())
     frame.Show()
     app.MainLoop()
 
