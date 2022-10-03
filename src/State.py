@@ -23,3 +23,9 @@ class State:
             self.__energy = value
         for i in self.__energy_observers:
             i(self.__energy)
+    
+    def jsonObject(self) -> dict:
+        return {'energy': self.energy}
+    
+    def importJsonObject(self, jsonObject: dict):
+        self.energy = jsonObject['energy']
