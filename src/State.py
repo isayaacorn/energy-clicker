@@ -1,5 +1,6 @@
 from typing import Callable
 
+
 class State:
     __energy: int
     __energy_observers: list[Callable[[int], None]]
@@ -14,7 +15,7 @@ class State:
     @property
     def energy(self) -> int:
         return self.__energy
-    
+
     @energy.setter
     def energy(self, value: int):
         if value < 0:
@@ -23,9 +24,9 @@ class State:
             self.__energy = value
         for i in self.__energy_observers:
             i(self.__energy)
-    
-    def jsonObject(self) -> dict:
+
+    def json_object(self) -> dict:
         return {'energy': self.energy}
-    
-    def importJsonObject(self, jsonObject: dict):
-        self.energy = jsonObject['energy']
+
+    def import_json_object(self, json_object: dict):
+        self.energy = json_object['energy']

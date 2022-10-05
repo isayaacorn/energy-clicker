@@ -1,12 +1,14 @@
-from wx import App, Frame
+from wx import App
 
 from src import MainFrame, State
 
+
 def main():
     app = App()
-    frame = MainFrame(None, title = "Energy Clicker", state = State())
+    frame = MainFrame(None, title="Energy Clicker", state=State())
     frame.Show()
     app.MainLoop()
+
 
 if __name__ == "__main__":
     main()
