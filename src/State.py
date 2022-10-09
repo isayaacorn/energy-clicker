@@ -1,3 +1,4 @@
+from collections import defaultdict
 from decimal import Decimal
 from typing import Callable
 
@@ -9,12 +10,16 @@ class State:
     __energy_per_second: Decimal
     __energy_per_second_observers: list[Callable[[Decimal], None]]
 
+    buildings: defaultdict[str, int]
+
     def __init__(self):
         self.__energy = Decimal(0)
         self.__energy_observers = []
 
         self.__energy_per_second = Decimal(0)
         self.__energy_per_second_observers = []
+
+        self.buildings = defaultdict(lambda: 0)
 
     def register_energy_observer(self, observer: Callable[[Decimal], None]):
         self.__energy_observers.append(observer)
@@ -45,15 +50,20 @@ class State:
         for i in self.__energy_per_second_observers:
             i(self.__energy_per_second)
 
+    def add_building(self, building: str):
+        self.buildings[building] += 0
+
     def tick(self):
         self.energy += self.energy_per_second
 
     def json_object(self) -> dict:
         return {
             'energy': float(self.energy),
-            'eps': float(self.energy_per_second)
+            'eps': float(self.energy_per_second),
+            'buildings': self.buildings,
         }
 
     def import_json_object(self, json_object: dict):
         self.energy = Decimal(json_object['energy'])
         self.energy_per_second = Decimal(json_object['eps'])
+        self.buildings = defaultdict(lambda: 0, json_object['buildings'])
