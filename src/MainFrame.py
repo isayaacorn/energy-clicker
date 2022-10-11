@@ -8,11 +8,14 @@ from wx import Frame, Button, EVT_BUTTON, BoxSizer, StaticBoxSizer, VERTICAL, Im
     ALIGN_CENTER_HORIZONTAL, Window, MenuBar, Menu, ID_SAVE, ID_OPEN, EVT_MENU, FileDialog, FD_SAVE, FD_OPEN, \
     ID_CANCEL, MessageDialog, OK, CENTER, Timer, EVT_TIMER
 
+from .Building import BUILDINGS, Building
 from .State import State
 
 
 class MainFrame(Frame):
-    state: State
+    __state: State
+    __timer: Timer
+    __building_texts: dict[str, StaticText]
 
     def __init__(self, parent: Optional[Window], title: str, state: State):
         super().__init__(parent, title=title, size=(1920, 1080))
@@ -35,43 +38,47 @@ class MainFrame(Frame):
         click_sizer.Add(eps_text)
         click_sizer.Add(energy_button)
 
-        campfire_button = Button(self)
-        campfire_button.SetBitmap(Bitmap(Image(join('img', 'icons', 'campfire.png'), BITMAP_TYPE_PNG)))
-        campfire_button.Bind(EVT_BUTTON, lambda _: self.purchase_building('campfire', Decimal(0.2), Decimal(15)))
-        self.campfire_text = StaticText(self, label='15.00⚡')
-        campfire_sizer = StaticBoxSizer(orient=VERTICAL, parent=self, label='Campfire')
-        campfire_sizer.Add(campfire_button)
-        campfire_sizer.Add(self.campfire_text)
+        self.__building_texts = {}
 
         building_sizer = StaticBoxSizer(orient=VERTICAL, parent=self, label='Buildings')
-        building_sizer.Add(campfire_sizer)
+
+        for building in BUILDINGS:
+            button = Button(self)
+            button.SetBitmap(Bitmap(Image(join('img', 'icons', f'{building.id}.png'), BITMAP_TYPE_PNG)))
+            button.Bind(
+                EVT_BUTTON, lambda _: self.purchase_building(building))
+            self.__building_texts[building.id] = StaticText(self, label=f'{building.name}: {building.price:.2f}')
+            sizer = StaticBoxSizer(orient=VERTICAL, parent=self, label=building.name)
+            sizer.Add(button)
+            sizer.Add(self.__building_texts[building.id])
+            building_sizer.Add(sizer)
 
         sizer = BoxSizer(orient=VERTICAL)
         sizer.Add(click_sizer)
         sizer.Add(building_sizer)
 
-        self.state = state
-        self.state.register_energy_observer(
+        self.__state = state
+        self.__state.register_energy_observer(
             lambda energy: energy_text.SetLabel(f'{round(energy, 2).normalize().to_eng_string()}⚡'))
-        self.state.register_energy_per_second_observer(
+        self.__state.register_energy_per_second_observer(
             lambda eps: eps_text.SetLabel(f'{round(eps, 1).normalize().to_eng_string()}⚡/sec'))
         self.SetSizerAndFit(sizer)
         self.Show()
 
-        self.timer = Timer(self)
-        self.Bind(EVT_TIMER, lambda _: self.state.tick(), self.timer)
-        self.timer.Start(1000)
+        self.__timer = Timer(self)
+        self.Bind(EVT_TIMER, lambda _: self.__state.tick(), self.__timer)
+        self.__timer.Start(1000)
 
     def add_energy(self, energy: Decimal):
-        self.state.energy += energy
+        self.__state.energy += energy
 
-    def purchase_building(self, building: str, eps: Decimal, price: Decimal):
-        new_price = round(price * Decimal(1.05) ** self.state.buildings[building], 2)
-        if self.state.energy >= new_price:
-            self.state.energy -= new_price
-            self.state.energy_per_second += eps
-            self.state.buildings[building] += 1
-            self.campfire_text.SetLabel(f'{round(new_price * Decimal(1.05), 2)}⚡')
+    def purchase_building(self, building: Building):
+        new_price = round(building.price * Decimal(1.05) ** self.__state.buildings[building.id], 2)
+        if self.__state.energy >= new_price:
+            self.__state.energy -= new_price
+            self.__state.energy_per_second += building.energy_per_second
+            self.__state.buildings[building.id] += 1
+            self.__building_texts[building.id].SetLabel(f'{building.name}: {new_price * Decimal(1.05):.2f}⚡')
 
     def save(self):
         with FileDialog(self, 'Choose file', wildcard='JSON File (*.json)|*.json', style=FD_SAVE) as dialog:
@@ -81,7 +88,7 @@ class MainFrame(Frame):
             path = dialog.GetPath()
             try:
                 with open(path, 'w') as file:
-                    dump(self.state.json_object(), file)
+                    dump(self.__state.json_object(), file)
             except IOError:
                 MessageDialog(self, 'I/O error', style=OK | CENTER)
 
@@ -93,6 +100,6 @@ class MainFrame(Frame):
             path = dialog.GetPath()
             try:
                 with open(path, 'r') as file:
-                    self.state.import_json_object(load(file))
+                    self.__state.import_json_object(load(file))
             except IOError:
                 MessageDialog(self, 'I/O error', style=OK | CENTER)
