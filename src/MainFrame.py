@@ -62,6 +62,7 @@ class MainFrame(Frame):
             lambda energy: energy_text.SetLabel(f'{round(energy, 2).normalize().to_eng_string()}⚡'))
         self.__state.register_energy_per_second_observer(
             lambda eps: eps_text.SetLabel(f'{round(eps, 1).normalize().to_eng_string()}⚡/sec'))
+        self.__state.register_buildings_observer(lambda _: self.update_buildings())
         self.SetSizerAndFit(sizer)
         self.Show()
 
@@ -77,8 +78,13 @@ class MainFrame(Frame):
         if self.__state.energy >= new_price:
             self.__state.energy -= new_price
             self.__state.energy_per_second += building.energy_per_second
-            self.__state.buildings[building.id] += 1
+            self.__state.add_building(building)
             self.__building_texts[building.id].SetLabel(f'{building.name}: {new_price * Decimal(1.05):.2f}⚡')
+
+    def update_buildings(self):
+        for building in BUILDINGS:
+            self.__building_texts[building.id].SetLabel(
+                f'{building.name}: {round(building.price * Decimal(1.05) ** self.__state.buildings[building.id], 2)}')
 
     def save(self):
         with FileDialog(self, 'Choose file', wildcard='JSON File (*.json)|*.json', style=FD_SAVE) as dialog:
