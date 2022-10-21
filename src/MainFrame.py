@@ -10,6 +10,7 @@ from wx import Frame, Button, EVT_BUTTON, BoxSizer, StaticBoxSizer, VERTICAL, Im
 
 from .Building import BUILDINGS, Building
 from .State import State
+from .assets import get_asset
 
 
 class MainFrame(Frame):
@@ -31,7 +32,7 @@ class MainFrame(Frame):
         energy_text = StaticText(self, label='0⚡', style=ALIGN_CENTER_HORIZONTAL)
         eps_text = StaticText(self, label='0⚡/sec')
         energy_button = Button(self)
-        energy_button.SetBitmap(Bitmap(Image(join('img', 'icons', 'lightning.png'), BITMAP_TYPE_PNG)))
+        energy_button.SetBitmap(get_asset('lightning'))
         energy_button.Bind(EVT_BUTTON, lambda _: self.add_energy(Decimal(1)))
         click_sizer = StaticBoxSizer(orient=VERTICAL, parent=self, label='Energy')
         click_sizer.Add(energy_text)
@@ -44,7 +45,7 @@ class MainFrame(Frame):
 
         for building in BUILDINGS:
             button = Button(self)
-            button.SetBitmap(Bitmap(Image(join('img', 'icons', f'{building.id}.png'), BITMAP_TYPE_PNG)))
+            button.SetBitmap(get_asset(building.id))
             button.Bind(
                 EVT_BUTTON, lambda _: self.purchase_building(building))
             self.__building_texts[building.id] = StaticText(self, label=f'{building.name}: {building.price:.2f}')
