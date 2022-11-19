@@ -6,7 +6,7 @@ from typing import Optional
 from wx import Frame, Button, EVT_BUTTON, BoxSizer, StaticBoxSizer, VERTICAL, Image, Bitmap, BITMAP_TYPE_PNG, \
     StaticText, \
     ALIGN_CENTER_HORIZONTAL, Window, MenuBar, Menu, ID_SAVE, ID_OPEN, EVT_MENU, FileDialog, FD_SAVE, FD_OPEN, \
-    ID_CANCEL, MessageDialog, OK, CENTER, Timer, EVT_TIMER
+    ID_CANCEL, MessageDialog, OK, CENTER, Timer, EVT_TIMER, ScrolledWindow
 
 from .Building import BUILDINGS, Building
 from .State import State
@@ -45,10 +45,11 @@ class MainFrame(Frame):
 
         for building in BUILDINGS:
             button = Button(self)
+            button.building = building
             button.SetBitmap(get_asset(building.id))
             button.Bind(
-                EVT_BUTTON, lambda _: self.purchase_building(building))
-            self.__building_texts[building.id] = StaticText(self, label=f'{building.name}: {building.price:.2f}')
+                EVT_BUTTON, lambda event: self.purchase_building(event.GetEventObject().building))
+            self.__building_texts[building.id] = StaticText(self, label=f'{building.name}: {building.price:.2f}⚡')
             sizer = StaticBoxSizer(orient=VERTICAL, parent=self, label=building.name)
             sizer.Add(button)
             sizer.Add(self.__building_texts[building.id])
